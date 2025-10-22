@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Portal — Modern Interactive</title>
+  <style>
+    :root{
+      --bg:#f4f7fb; --card:#ffffff; --accent:#334155; --accent-2:#5567a3;
+      --muted:#6b7280; --success:#16a34a; --danger:#ef4444; --glass: rgba(255,255,255,0.7);
+    }
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;}
+    body{margin:0;background:linear-gradient(180deg,#f4f7fb 0%, #eef2ff 100%);color:#0f172a;min-height:100vh;display:flex;flex-direction:column;}
+    /* Login screen */
+    .overlay {position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(10,12,20,0.35);backdrop-filter:blur(4px);z-index:60;}
+    .card {background:var(--card);border-radius:12px;padding:18px;box-shadow:0 8px 30px rgba(2,6,23,0.12);width:100%;max-width:1100px;}
+    .login-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+    .login-left{padding:20px;border-radius:10px;background:linear-gradient(180deg,#2e3a59,#445179);color:white;display:flex;flex-direction:column;justify-content:center}
+    .logo{font-weight:700;font-size:1.4rem;letter-spacing:0.4px}
+    .login-right{padding:20px}
+    input, textarea, select{width:100%;padding:10px;border-radius:8px;border:1px solid #e6edf3;font-size:0.95rem;background:#fff}
+    button{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:9px;cursor:pointer;font-weight:600}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid #e2e8f0}
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:linear-gradient(90deg,var(--card),#f8fafc);box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    .brand{display:flex;gap:14px;align-items:center}
+    .brand .logo-small{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,var(--accent-2),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    .top-right{display:flex;gap:12px;align-items:center}
+    .welcome{font-weight:600}
+    .bell{position:relative;cursor:pointer;padding:8px;border-radius:8px}
+    .badge{position:absolute;right:4px;top:4px;background:var(--danger);color:#fff;font-size:0.7rem;padding:3px 6px;border-radius:999px}
+    /* Tabs */
+    .tabs{display:flex;gap:6px;padding:12px 18px;background:transparent;flex-wrap:wrap}
+    .tab{padding:10px 14px;border-radius:10px;cursor:pointer;color:var(--muted);font-weight:600}
+    .tab.active{background:linear-gradient(90deg,#ecf0ff,#f0f6ff);color:var(--accent)}
+    .main{display:grid;grid-template-columns:320px 1fr;gap:20px;padding:22px}
+    /* Left column */
+    .left{display:flex;flex-direction:column;gap:14px}
+    .small-card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.04)}
+    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .stat{padding:12px;border-radius:10px;background:linear-gradient(180deg,#fff,#fbfdff);text-align:center}
+    .stat h4{margin:0;font-size:1.05rem;color:var(--accent)}
+    .stat p{margin:6px 0 0;color:var(--muted);font-size:0.9rem}
+    /* Right column content */
+    .content-area{display:flex;flex-direction:column;gap:14px}
+    .ann-list .ann{border-left:4px solid #ffb454;background:#fffbf3;padding:12px;border-radius:8px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;text-align:left;border-bottom:1px solid #eef2f7;font-size:0.95rem}
+    th{background:var(--accent);color:#fff}
+    .flex{display:flex;gap:10px;align-items:center}
+    .muted{color:var(--muted);font-size:0.95rem}
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .day{background:var(--card);padding:10px;border-radius:8px;min-height:90px;position:relative;cursor:pointer;border:1px solid #f1f5f9}
+    .day .date{font-size:0.9rem;color:var(--muted);position:absolute;top:8px;right:8px}
+    .day.today{box-shadow:0 6px 18px rgba(83,110,255,0.14);border:1px solid rgba(83,110,255,0.18)}
+    .event{background:#eef2ff;padding:6px;border-radius:6px;margin-top:28px;font-size:0.85rem}
+    .small-btn{padding:6px 8px;border-radius:8px;border:none;background:#edf2ff;color:var(--accent);cursor:pointer}
+    .row-actions{display:flex;gap:6px}
+    .editable{background:#fff;padding:8px;border-radius:8px;border:1px dashed #e6eefc}
+    .gpa{font-size:1.2rem;font-weight:700;color:var(--accent)}
+    /* modal */
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.35);z-index:80}
+    .modal .card{max-width:640px;width:100%}
+    /* responsive */
+    @media (max-width:980px){
+      .main{grid-template-columns:1fr; padding:14px}
+      .login-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN overlay (simulated) -->
+  <div id="loginOverlay" class="overlay">
+    <div class="card login-grid" role="dialog" aria-modal="true">
+      <div class="login-left">
+        <div class="logo">UniPortal</div>
+        <p style="margin-top:12px;opacity:0.95">Welcome to the demo Student Portal prototype. Use <b>2025-12345</b> as ID and any password, or create your own profile after login.</p>
+        <div style="margin-top:auto;font-size:0.9rem;opacity:0.9">Tip: This demo stores your announcements, profile, events and grades in your browser localStorage.</div>
+      </div>
+      <div class="login-right">
+        <h3 style="margin-bottom:8px">Sign In</h3>
+        <label class="muted">Student ID</label>
+        <input id="loginId" placeholder="e.g. 2025-12345" />
+        <label class="muted" style="margin-top:8px">Password</label>
+        <input id="loginPass" type="password" placeholder="password" />
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button id="btnLogin">Sign In</button>
+          <button class="ghost" id="btnDemo">Quick Demo</button>
+        </div>
+        <hr style="margin:14px 0;border:none;border-top:1px solid #eef2f7"/>
+        <div class="muted">Or sign in with</div>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="small-btn">SSO</button>
+          <button class="small-btn">Google</button>
+          <button class="small-btn">Microsoft</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main header -->
+  <header>
+    <div class="brand">
+      <div class="logo-small">UP</div>
+      <div>
+        <div style="font-weight:700">University Portal</div>
+        <div class="muted" id="subHeaderSmall">Student Dashboard</div>
+      </div>
+    </div>
+
+    <div class="top-right">
+      <div class="welcome" id="welcomeText">Welcome, Student</div>
+      <div class="bell" id="bellBtn" title="Notifications">🔔<span id="notifCount" class="badge" style="display:none">0</span></div>
+      <div style="position:relative">
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs card" role="tablist" aria-label="Portal Tabs">
+    <div class="tab active" data-target="dashboardTab">Dashboard</div>
+    <div class="tab" data-target="gradesTab">Grades</div>
+    <div class="tab" data-target="balancesTab">Balances</div>
+    <div class="tab" data-target="registrationTab">Registration</div>
+    <div class="tab" data-target="calendarTab">Calendar</div>
+    <div class="tab" data-target="annTab">Announcements</div>
+    <div class="tab" data-target="profileTab">Profile</div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- left column -->
+    <div class="left">
+      <div class="small-card">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,var(--accent-2),var(--accent));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.2rem" id="avatarInitial">J</div>
+          <div>
+            <div style="font-weight:700" id="leftName">Juan Dela Cruz</div>
+            <div class="muted" id="leftId">2025-12345</div>
+            <div class="muted" id="leftProgram">BS Computer Science</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="small-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div class="muted">Current GPA</div><div class="gpa" id="gpaVal">3.75</div></div>
+          <div style="text-align:right"><div class="muted">Units</div><div style="font-weight:700">24</div></div>
+        </div>
+      </div>
+
+      <div class="small-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="muted">Outstanding Balance</div>
+            <div style="font-weight:800;color:#b91c1c">₱ <span id="balanceVal">5,200.00</span></div>
+          </div>
+          <div>
+            <button id="payBtn" class="small-btn">Pay Now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="small-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="muted">Upcoming</div>
+            <div id="upcomingCount" style="font-weight:700">0 events</div>
+          </div>
+          <div>
+            <button id="viewCalendar" class="small-btn">Open Calendar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- right column -->
+    <div class="content-area">
+      <!-- Dashboard Tab -->
+      <div class="card content-panel" id="dashboardTab">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:1.2rem;font-weight:700" id="welcomeMain">Welcome, Juan Dela Cruz 👋</div>
+            <div class="muted" id="welcomeSub">Here's an overview of your account</div>
+          </div>
+          <div class="flex">
+            <button id="addAnnBtn" class="small-btn">Add Announcement</button>
+            <button id="openGrades" class="small-btn">Grades</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px">
+          <div class="small-card">
+            <div style="font-weight:700;margin-bottom:6px">Recent Announcements</div>
+            <div id="annPreview" class="ann-list"></div>
+          </div>
+          <div class="small-card">
+            <div style="font-weight:700;margin-bottom:6px">Upcoming Events</div>
+            <div id="upcomingList" class="muted">No upcoming events</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grades Tab -->
+      <div class="card content-panel" id="gradesTab" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Grades & Calculator</div>
+          <div class="muted">Compute weighted GPA (enter units & numeric grade)</div>
+        </div>
+
+        <div style="margin-top:12px;overflow:auto">
+          <table id="gradesTable">
+            <thead><tr><th>Course</th><th>Units</th><th>Grade</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button id="addCourse" class="small-btn">+ Add Course</button>
+            <button id="calcGpa" class="small-btn">Calculate GPA</button>
+            <div style="margin-left:auto" class="muted">GPA: <span id="gpaCalc">-</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balances Tab -->
+      <div class="card content-panel" id="balancesTab" style="display:none">
+        <div style="font-weight:700">Balances</div>
+        <table id="balancesTable">
+          <thead><tr><th>Description</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Registration Tab -->
+      <div class="card content-panel" id="registrationTab" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:700">Official Registration</div>
+            <div class="muted">Download your registration form (generated)</div>
+          </div>
+          <div>
+            <button id="downloadReg" class="small-btn">⬇ Download Form</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendar Tab -->
+      <div class="card content-panel" id="calendarTab" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Academic Calendar</div>
+          <div class="muted" id="monthTitle"></div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+      </div>
+
+      <!-- Announcements Tab -->
+      <div class="card content-panel" id="annTab" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Manage Announcements</div>
+          <div class="muted">Add, edit or remove announcements</div>
+        </div>
+
+        <div style="margin-top:12px">
+          <form id="annForm" onsubmit="return false">
+            <input id="annTitle" placeholder="Title" required style="margin-bottom:8px"/>
+            <textarea id="annBody" placeholder="Announcement details" rows="3"></textarea>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button id="saveAnn">Save Announcement</button>
+              <button id="clearAnn" class="ghost">Clear</button>
+            </div>
+          </form>
+
+          <div style="margin-top:12px">
+            <div id="annList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Tab -->
+      <div class="card content-panel" id="profileTab" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:700">Profile</div>
+          <div class="muted">Edit basic info (stored locally)</div>
+        </div>
+
+        <form id="profileForm" style="margin-top:12px" onsubmit="return false">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <input id="pfName" placeholder="Full Name"/>
+            <input id="pfId" placeholder="Student ID"/>
+            <input id="pfProgram" placeholder="Program"/>
+            <input id="pfEmail" placeholder="Email"/>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="saveProfile">Save Profile</button>
+            <button id="resetProfile" class="ghost">Reset</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for calendar event -->
+  <div id="modal" style="display:none" class="modal">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700" id="modalTitle">Event</div>
+        <div><button id="closeModal" class="ghost">Close</button></div>
+      </div>
+      <div style="margin-top:10px">
+        <input id="evtDate" disabled />
+        <input id="evtTitle" placeholder="Event Title" style="margin-top:8px"/>
+        <textarea id="evtDesc" rows="3" placeholder="Description" style="margin-top:8px"></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="saveEvent">Save</button>
+          <button id="deleteEvent" class="ghost" style="color:var(--danger)">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification dropdown -->
+  <div id="notifDropdown" style="display:none;position:fixed;right:22px;top:82px;z-index:70">
+    <div class="card" style="width:320px;">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:700">Notifications</div>
+        <div class="muted" id="clearNotif" style="cursor:pointer">Clear</div>
+      </div>
+      <div id="notifList" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <script>
+    /*******************************
+      Storage helpers & defaults
+    *******************************/
+    const LS = {
+      get(k, fallback){ try { return JSON.parse(localStorage.getItem(k)) ?? fallback; } catch(e){ return fallback; } },
+      set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+    };
+
+    // default data if none present
+    const defaults = {
+      profile: { name:'Juan Dela Cruz', id:'2025-12345', program:'BS Computer Science', email:'juan.delacruz@university.edu.ph' },
+      announcements: [
+        {id: genId(), title:'Midterm Exams Schedule', body:'Midterm exams begin on November 10. Check course pages for details.', ts: Date.now()},
+        {id: genId(), title:'Enrollment Reminder', body:'Online enrollment opens June 15. Prepare your requirements.', ts: Date.now()-86400000}
+      ],
+      events: {}, // {"2025-11-10":[{id,title,desc,ts}]}
+      balances: [
+        {id:genId(),desc:'Tuition Fee',amt:20000,status:'Paid'},
+        {id:genId(),desc:'Laboratory Fee',amt:3500,status:'Unpaid'},
+        {id:genId(),desc:'Library Fee',amt:1700,status:'Unpaid'}
+      ],
+      grades: [
+        {id:genId(),course:'Mathematics',units:3,grade:1.25},
+        {id:genId(),course:'English Literature',units:3,grade:1.5},
+        {id:genId(),course:'Computer Science',units:4,grade:1.0}
+      ],
+      notifications: [
+        {id:genId(),text:'New grade posted for Computer Science',ts:Date.now()-3600000},
+        {id:genId(),text:'Enrollment for next semester is open',ts:Date.now()-7200000}
+      ]
+    };
+
+    // initialize missing localStorage keys
+    if(!LS.get('profile')) LS.set('profile', defaults.profile);
+    if(!LS.get('announcements')) LS.set('announcements', defaults.announcements);
+    if(!LS.get('events')) LS.set('events', defaults.events);
+    if(!LS.get('balances')) LS.set('balances', defaults.balances);
+    if(!LS.get('grades')) LS.set('grades', defaults.grades);
+    if(!LS.get('notifications')) LS.set('notifications', defaults.notifications);
+
+    /*******************************
+      DOM refs
+    *******************************/
+    const loginOverlay = document.getElementById('loginOverlay');
+    const btnLogin = document.getElementById('btnLogin');
+    const btnDemo = document.getElementById('btnDemo');
+    const welcomeText = document.getElementById('welcomeText');
+    const welcomeMain = document.getElementById('welcomeMain');
+    const leftName = document.getElementById('leftName');
+    const leftId = document.getElementById('leftId');
+    const leftProgram = document.getElementById('leftProgram');
+    const avatarInitial = document.getElementById('avatarInitial');
+    const subHeaderSmall = document.getElementById('subHeaderSmall');
+    const notifCount = document.getElementById('notifCount');
+    const bellBtn = document.getElementById('bellBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const notifList = document.getElementById('notifList');
+    const clearNotif = document.getElementById('clearNotif');
+    const annPreview = document.getElementById('annPreview');
+    const annList = document.getElementById('annList');
+    const annForm = document.getElementById('annForm');
+    const annTitle = document.getElementById('annTitle');
+    const annBody = document.getElementById('annBody');
+    const saveAnn = document.getElementById('saveAnn');
+    const dashboardTab = document.getElementById('dashboardTab');
+    const addAnnBtn = document.getElementById('addAnnBtn');
+    const upcomingList = document.getElementById('upcomingList');
+    const upcomingCount = document.getElementById('upcomingCount');
+
+    // grades
+    const gradesTableBody = document.querySelector('#gradesTable tbody');
+    const addCourse = document.getElementById('addCourse');
+    const calcGpa = document.getElementById('calcGpa');
+    const gpaCalc = document.getElementById('gpaCalc');
+    const gpaVal = document.getElementById('gpaVal');
+
+    // balances
+    const balancesTableBody = document.querySelector('#balancesTable tbody');
+
+    // profile
+    const pfName = document.getElementById('pfName');
+    const pfId = document.getElementById('pfId');
+    const pfProgram = document.getElementById('pfProgram');
+    const pfEmail = document.getElementById('pfEmail');
+    const saveProfile = document.getElementById('saveProfile');
+    const resetProfile = document.getElementById('resetProfile');
+
+    // calendar
+    const calendarGrid = document.getElementById('calendarGrid');
+    const monthTitle = document.getElementById('monthTitle');
+    const viewCalendar = document.getElementById('viewCalendar');
+
+    // modal
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const evtDate = document.getElementById('evtDate');
+    const evtTitle = document.getElementById('evtTitle');
+    const evtDesc = document.getElementById('evtDesc');
+    const saveEvent = document.getElementById('saveEvent');
+    const deleteEvent = document.getElementById('deleteEvent');
+    const closeModal = document.getElementById('closeModal');
+
+    // registration
+    const downloadReg = document.getElementById('downloadReg');
+
+    // tabs
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.content-panel');
+
+    // logout
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    /*******************************
+      Utilities
+    *******************************/
+    function genId(){ return 'id_'+Math.random().toString(36).slice(2,9); }
+    function formatDateKey(d){ // YYYY-MM-DD
+      const y = d.getFullYear(); const m = (d.getMonth()+1).toString().padStart(2,'0'); const day = d.getDate().toString().padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
+    function friendlyDateKey(key){
+      const d = new Date(key);
+      return d.toLocaleDateString();
+    }
+
+    /*******************************
+      Login / Initialization
+    *******************************/
+    function initUI(){
+      const profile = LS.get('profile');
+      welcomeText.textContent = `Welcome, ${profile.name.split(' ')[0]}`;
+      welcomeMain.textContent = `Welcome, ${profile.name} 👋`;
+      leftName.textContent = profile.name;
+      leftId.textContent = profile.id;
+      leftProgram.textContent = profile.program;
+      pfName.value = profile.name;
+      pfId.value = profile.id;
+      pfProgram.value = profile.program;
+      pfEmail.value = profile.email;
+      avatarInitial.textContent = (profile.name||'U').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase();
+      subHeaderSmall.textContent = `${profile.program} • ${profile.id}`;
+      renderAnnouncements();
+      renderNotif();
+      renderUpcoming();
+      renderBalances();
+      renderGrades();
+      renderCalendar();
+    }
+
+    btnDemo.addEventListener('click', ()=>{
+      // quick demo: accept and close overlay
+      LS.set('profile', { name:'Bailey Ming', id:'2025-12345', program:'BS Computer Science', email:'bailey@example.com' });
+      loginOverlay.style.display='none';
+      initUI();
+    });
+
+    btnLogin.addEventListener('click', ()=>{
+      const id = document.getElementById('loginId').value.trim();
+      if(!id){ alert('Enter Student ID'); return; }
+      // if profile exists with id, use it; else create basic
+      const profile = LS.get('profile');
+      profile.id = id;
+      LS.set('profile', profile);
+      loginOverlay.style.display='none';
+      initUI();
+    });
+
+    logoutBtn.addEventListener('click', ()=>{
+      // show overlay again (simulate logout)
+      loginOverlay.style.display = 'flex';
+    });
+
+    /*******************************
+      Tabs
+    *******************************/
+    tabs.forEach(t=>{
+      t.addEventListener('click', ()=> {
+        tabs.forEach(x=>x.classList.remove('active'));
+        panels.forEach(p=>p.style.display='none');
+        t.classList.add('active');
+        const target = document.getElementById(t.dataset.target);
+        if(target) target.style.display = 'block';
+      });
+    });
+
+    // quick shortcuts
+    document.getElementById('openGrades').addEventListener('click', ()=> {
+      document.querySelector('.tab[data-target="gradesTab"]').click();
+    });
+    viewCalendar.addEventListener('click', ()=> document.querySelector('.tab[data-target="calendarTab"]').click());
+
+    /*******************************
+      Notifications
+    *******************************/
+    function renderNotif(){
+      const notes = LS.get('notifications') || [];
+      notifCount.style.display = notes.length ? 'inline-block' : 'none';
+      notifCount.textContent = notes.length;
+      notifList.innerHTML = '';
+      if(!notes.length){ notifList.innerHTML = '<div class="muted" style="padding:8px">No notifications</div>'; return; }
+      notes.forEach(n=>{
+        const el = document.createElement('div');
+        el.style.padding='8px';
+        el.style.borderBottom='1px solid #eef2f7';
+        el.innerHTML = `<div style="font-weight:600">${n.text}</div><div class="muted" style="font-size:0.8rem">${new Date(n.ts).toLocaleString()}</div>`;
+        notifList.appendChild(el);
+      });
+    }
+    bellBtn.addEventListener('click', ()=>{
+      notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
+      renderNotif();
+    });
+    clearNotif.addEventListener('click', ()=>{
+      LS.set('notifications', []);
+      renderNotif();
+      notifDropdown.style.display='none';
+    });
+
+    /*******************************
+      Announcements
+    *******************************/
+    function renderAnnouncements(){
+      const anns = LS.get('announcements') || [];
+      // preview (3)
+      annPreview.innerHTML = '';
+      anns.slice(0,3).forEach(a => {
+        const d = document.createElement('div'); d.className='ann';
+        d.innerHTML = `<strong>${a.title}</strong><div class="muted" style="margin-top:6px">${a.body}</div>`;
+        annPreview.appendChild(d);
+      });
+      // full list
+      annList.innerHTML = '';
+      anns.forEach(a=>{
+        const wrapper = document.createElement('div');
+        wrapper.style.marginBottom = '8px';
+        wrapper.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:600">${a.title}</div>
+              <div class="muted" style="font-size:0.9rem">${a.body}</div>
+              <div class="muted" style="font-size:0.8rem;margin-top:6px">${new Date(a.ts).toLocaleString()}</div>
+            </div>
+            <div class="row-actions">
+              <button class="small-btn" data-id="${a.id}" data-action="edit">Edit</button>
+              <button class="small-btn" data-id="${a.id}" data-action="delete">Delete</button>
+            </div>
+          </div>
+        `;
+        annList.appendChild(wrapper);
+      });
+
+      // attach handlers
+      annList.querySelectorAll('button').forEach(b=>{
+        b.addEventListener('click', (e)=>{
+          const id = b.dataset.id; const action = b.dataset.action;
+          if(action==='edit'){
+            const anns = LS.get('announcements') || [];
+            const item = anns.find(x=>x.id===id);
+            if(item){ annTitle.value = item.title; annBody.value = item.body; saveAnn.dataset.edit = id; document.querySelector('.tab[data-target="annTab"]').click(); }
+          } else {
+            if(confirm('Delete announcement?')){
+              const anns = LS.get('announcements') || [];
+              LS.set('announcements', anns.filter(x=>x.id!==id));
+              renderAnnouncements(); renderAnnPreview();
+            }
+          }
+        });
+      });
+    }
+
+    function renderAnnPreview(){ renderAnnouncements(); }
+
+    saveAnn.addEventListener('click', ()=>{
+      const title = annTitle.value.trim(); const body = annBody.value.trim();
+      if(!title || !body) { alert('Enter title and body'); return; }
+      const anns = LS.get('announcements') || [];
+      if(saveAnn.dataset.edit){
+        const id = saveAnn.dataset.edit;
+        const idx = anns.findIndex(a=>a.id===id);
+        if(idx>=0){ anns[idx].title = title; anns[idx].body = body; anns[idx].ts = Date.now(); }
+        delete saveAnn.dataset.edit;
+      } else {
+        anns.unshift({id:genId(),title,body,ts:Date.now()});
+      }
+      LS.set('announcements', anns);
+      annForm.reset();
+      renderAnnouncements();
+      document.querySelector('.tab[data-target="dashboardTab"]').click();
+    });
+
+    document.getElementById('clearAnn').addEventListener('click', ()=> { annForm.reset(); delete saveAnn.dataset.edit; });
+
+    addAnnBtn.addEventListener('click', ()=> document.querySelector('.tab[data-target="annTab"]').click());
+
+    /*******************************
+      Upcoming events
+    *******************************/
+    function renderUpcoming(){
+      const events = LS.get('events') || {};
+      const upcoming = [];
+      const today = new Date();
+      const keys = Object.keys(events).sort();
+      keys.forEach(k=>{
+        events[k].forEach(e=> {
+          const dt = new Date(k);
+          if(dt >= new Date(today.getFullYear(),today.getMonth(),today.getDate())) upcoming.push({date:k,title:e.title});
+        });
+      });
+      upcomingList.innerHTML = upcoming.length ? upcoming.slice(0,5).map(u=>`<div style="margin-bottom:8px"><strong>${u.title}</strong> • <span class="muted">${u.date}</span></div>`).join('') : '<div class="muted">No upcoming events</div>';
+      upcomingCount.textContent = `${upcoming.length} events`;
+      // show next upcoming on left small card
+      const next = upcoming[0];
+      document.getElementById('upcomingList').innerHTML = next ? `<div style="font-weight:700">${next.title}</div><div class="muted">${next.date}</div>` : '<div class="muted">No upcoming events</div>';
+    }
+
+    /*******************************
+      Balances
+    *******************************/
+    function renderBalances(){
+      const balances = LS.get('balances') || [];
+      balancesTableBody.innerHTML = '';
+      balances.forEach(b=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${b.desc}</td><td>₱ ${b.amt.toLocaleString()}</td><td>${b.status}</td><td><button class="small-btn" data-id="${b.id}" data-act="toggle">${b.status==='Paid'?'Mark Unpaid':'Mark Paid'}</button></td>`;
+        balancesTableBody.appendChild(tr);
+      });
+      balancesTableBody.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click',(e)=>{
+          const id = btn.dataset.id; const act = btn.dataset.act;
+          let balances = LS.get('balances')||[];
+          balances = balances.map(b => b.id===id ? {...b,status:b.status==='Paid'?'Unpaid':'Paid'} : b);
+          LS.set('balances', balances);
+          renderBalances();
+        });
+      });
+      // update outstanding balance
+      const outstanding = (LS.get('balances')||[]).filter(b=>b.status!=='Paid').reduce((s,b)=>s+b.amt,0);
+      document.getElementById('balanceVal').textContent = outstanding.toLocaleString();
+    }
+
+    document.getElementById('payBtn').addEventListener('click', ()=> {
+      alert('Payment flow not implemented in demo. This button simulates payment and will mark all unpaid balances as Paid.');
+      let balances = LS.get('balances')||[];
+      balances = balances.map(b => ({...b, status:'Paid'}));
+      LS.set('balances', balances);
+      renderBalances();
+    });
+
+    /*******************************
+      Grades & GPA
+    *******************************/
+    function renderGrades(){
+      const grades = LS.get('grades') || [];
+      gradesTableBody.innerHTML = '';
+      grades.forEach(g=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td><input value="${g.course}" data-id="${g.id}" data-field="course" /></td>
+                        <td><input value="${g.units}" data-id="${g.id}" data-field="units" type="number" min="0" style="width:80px"/></td>
+                        <td><input value="${g.grade}" data-id="${g.id}" data-field="grade" type="number" step="0.01" style="width:80px"/></td>
+                        <td><div class="row-actions"><button class="small-btn" data-id="${g.id}" data-act="save">Save</button><button class="small-btn" data-id="${g.id}" data-act="del">Del</button></div></td>`;
+        gradesTableBody.appendChild(tr);
+      });
+      attachGradeHandlers();
+      updateDisplayedGPA();
+    }
+
+    function attachGradeHandlers(){
+      gradesTableBody.querySelectorAll('input').forEach(inp=>{
+        inp.addEventListener('change', ()=> {
+          const id = inp.dataset.id; const field = inp.dataset.field; const val = inp.value;
+          let grades = LS.get('grades')||[];
+          const idx = grades.findIndex(g=>g.id===id);
+          if(idx>=0){ grades[idx][field] = field==='units' || field==='grade' ? Number(val) : val; LS.set('grades',grades); renderGrades(); }
+        });
+      });
+      gradesTableBody.querySelectorAll('button').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const id = b.dataset.id; const act = b.dataset.act;
+          if(act==='del'){ if(confirm('Delete course?')) { LS.set('grades',(LS.get('grades')||[]).filter(x=>x.id!==id)); renderGrades(); } }
+          if(act==='save'){ alert('Saved'); }
+        });
+      });
+    }
+
+    addCourse.addEventListener('click', ()=>{
+      const grades = LS.get('grades')||[];
+      grades.push({id:genId(),course:'New Course',units:3,grade:1.0});
+      LS.set('grades',grades); renderGrades();
+    });
+
+    calcGpa.addEventListener('click', updateDisplayedGPA);
+
+    function updateDisplayedGPA(){
+      const grades = LS.get('grades')||[];
+      if(!grades.length){ gpaCalc.textContent='-'; return; }
+      let totalUnits = 0; let weighted = 0;
+      grades.forEach(g=>{ totalUnits += Number(g.units)||0; weighted += (Number(g.units)||0) * (Number(g.grade)||0); });
+      const gpa = totalUnits ? (weighted/totalUnits).toFixed(3) : '-';
+      gpaCalc.textContent = gpa;
+      gpaVal.textContent = gpa;
+      LS.set('gpa', gpa);
+    }
+
+    /*******************************
+      Profile
+    *******************************/
+    saveProfile.addEventListener('click', ()=>{
+      const profile = { name: pfName.value || 'Unnamed', id: pfId.value||'0000', program: pfProgram.value||'', email: pfEmail.value||''};
+      LS.set('profile', profile);
+      initUI();
+      alert('Profile saved locally.');
+    });
+
+    resetProfile.addEventListener('click', ()=> {
+      const profile = defaults.profile;
+      LS.set('profile', profile);
+      initUI();
+      alert('Profile reset to default.');
+    });
+
+    /*******************************
+      Calendar & Events
+    *******************************/
+    let selectedDateKey = null;
+    function renderCalendar(dateRef = new Date()){
+      calendarGrid.innerHTML = '';
+      const year = dateRef.getFullYear(); const month = dateRef.getMonth();
+      monthTitle.textContent = dateRef.toLocaleString(undefined,{month:'long', year:'numeric'});
+      // first day of month index
+      const firstDay = new Date(year, month, 1).getDay(); // 0-6 (Sun-Sat)
+      const daysInMonth = new Date(year, month+1, 0).getDate();
+      // show blank boxes for previous days
+      for(let i=0;i<firstDay;i++){ const b = document.createElement('div'); b.className='day'; b.style.opacity=0.4; calendarGrid.appendChild(b); }
+      const events = LS.get('events')||{};
+      for(let d=1; d<=daysInMonth; d++){
+        const key = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const day = document.createElement('div'); day.className='day'; if(formatDateKey(new Date())===key) day.classList.add('today');
+        day.innerHTML = `<div class="date">${d}</div>`;
+        const evs = events[key]||[];
+        evs.slice(0,3).forEach(e=>{
+          const ev = document.createElement('div'); ev.className='event'; ev.textContent = e.title; day.appendChild(ev);
+        });
+        day.addEventListener('click', ()=> openEventModal(key));
+        calendarGrid.appendChild(day);
+      }
+      renderUpcoming();
+    }
+
+    function openEventModal(key){
+      selectedDateKey = key;
+      modal.style.display = 'flex';
+      evtDate.value = key;
+      const evs = LS.get('events')||{};
+      const first = (evs[key] && evs[key][0]) || {title:'',desc:''};
+      evtTitle.value = first.title||'';
+      evtDesc.value = first.desc||'';
+      deleteEvent.style.display = (evs[key] && evs[key].length) ? 'inline-block' : 'none';
+    }
+
+    closeModal.addEventListener('click', ()=> modal.style.display='none');
+
+    saveEvent.addEventListener('click', ()=>{
+      const title = evtTitle.value.trim(); const desc = evtDesc.value.trim();
+      if(!title){ alert('Add a title for the event'); return; }
+      const events = LS.get('events')||{};
+      if(!events[selectedDateKey]) events[selectedDateKey] = [];
+      // upsert by id if matching first event, otherwise push
+      events[selectedDateKey].unshift({id:genId(),title,desc,ts:Date.now()});
+      LS.set('events', events);
+      modal.style.display='none';
+      renderCalendar(new Date(selectedDateKey));
+    });
+
+    deleteEvent.addEventListener('click', ()=>{
+      if(!confirm('Delete all events on this date?')) return;
+      const events = LS.get('events')||{};
+      delete events[selectedDateKey];
+      LS.set('events', events);
+      modal.style.display='none';
+      renderCalendar(new Date(selectedDateKey));
+    });
+
+    /*******************************
+      Registration download (generate simple PDF-like file)
+    *******************************/
+    downloadReg.addEventListener('click', ()=>{
+      const profile = LS.get('profile');
+      const content = `Registration Form\n\nName: ${profile.name}\nStudent ID: ${profile.id}\nProgram: ${profile.program}\n\n(Generated: ${new Date().toLocaleString()})\n\n--- This is a generated registration form for demo purposes. ---`;
+      const blob = new Blob([content], {type:'application/pdf'}); // browser downloads; not a real styled pdf but fine for demo
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `${profile.id}_registration.pdf`; a.click(); URL.revokeObjectURL(url);
+    });
+
+    /*******************************
+      Misc / initialization
+    *******************************/
+    function init(){
+      initUI();
+      loginOverlay.style.display = 'flex';
+      // attach bells
+      document.addEventListener('click', (e)=>{ if(!notifDropdown.contains(e.target) && !bellBtn.contains(e.target)) notifDropdown.style.display='none'; });
+      renderCalendar(new Date());
+      // load balances & grades
+      renderBalances();
+      renderGrades();
+    }
+    init();
+
+    /*******************************
+      Helper: render on page load & expose small functions for debug
+    *******************************/
+    // run on load
+    window.addEventListener('load', ()=> {
+      // ensure UI in sync
+      initUI();
+    });
+
+  </script>
+</body>
+</html>
